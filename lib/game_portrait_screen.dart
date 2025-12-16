@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:prueba_1/data/character_Data.dart';
 
 class GamePortraitScreen extends StatefulWidget {
@@ -33,7 +34,13 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
       filasClases = (classes.length / 2).round();
     }
 
+    // Aqui pillo la altura de pantalla para poner porcentajes de altura
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
+      // Para evitar problemas de overflow con el teclado del movil
+      resizeToAvoidBottomInset: false,
+
       body: Stack(
         children: [
           // Fondo
@@ -44,27 +51,44 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
             ),
           ),
 
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset("assets/title/title.png", height: 200, width: 400),
+          SizedBox(
+            // 100%
+            height: screenHeight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                    margin: EdgeInsets.all(10),
+                    child: Image.asset("assets/title/title.png", height: 200, width: 400)),
 
-              Container(
-                  margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                  child: _playerData()),
+                SizedBox(
+                  // 55%
+                  height: screenHeight * 0.55,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Container(
+                            margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                            child: _playerData()),
+                      ],
+                    ),
+                  ),
+                ),
 
-              Spacer(),
+                Spacer(),
 
-              Container(
-                  margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
-                  child: _playButton()),
-            ],
+                Container(
+                    margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
+                    child: _playButton()),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
+  // --------------------------------- MODULOS ---------------------------------
   Form _playerData() {
     return Form(
       key: _formKey,
@@ -132,6 +156,8 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
           color: Colors.deepPurpleAccent,
         ),
       ),
+
+      keyboardType: TextInputType.text,
 
       style: TextStyle(color: Colors.white),
 
@@ -306,7 +332,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
         backgroundColor: Colors.deepPurpleAccent,
-        minimumSize: Size(80, 40),
+        maximumSize: Size(100, 40)
       ),
       child: _formText("Jugar"),
     );
