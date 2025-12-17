@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:prueba_1/data/character_Data.dart';
+import 'package:prueba_1/models/character.dart';
 
 class GamePortraitScreen extends StatefulWidget {
   const GamePortraitScreen({super.key});
@@ -41,60 +40,63 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
       // Para evitar problemas de overflow con el teclado del movil
       resizeToAvoidBottomInset: false,
 
-      body: Stack(
-        children: [
-          // Fondo
-          Positioned.fill(
-            child: Image.asset(
-              "assets/background/portrait/portrait_background.png",
-              fit: BoxFit.cover,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Fondo
+            Positioned.fill(
+              child: Image.asset(
+                "assets/background/portrait/portrait_background.png",
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-
-          SizedBox(
-            // 100%
-            height: screenHeight,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                    margin: EdgeInsets.all(10),
-                    child: Image.asset("assets/title/title.png", height: 200, width: 400)),
-
-                SizedBox(
-                  // 55%
-                  height: screenHeight * 0.55,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Container(
-                            margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                            child: _playerData()),
-                      ],
+        
+            SizedBox(
+              // 100%
+              height: screenHeight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                      margin: EdgeInsets.all(10),
+                      child: Image.asset("assets/title/title.png", height: 200, width: 400)),
+        
+                  SizedBox(
+                    // 55%
+                    height: screenHeight * 0.55,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Container(
+                              margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                              child: _playerData()),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-
-                Spacer(),
-
-                Container(
-                    margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
-                    child: _playButton()),
-              ],
+        
+                  Spacer(),
+        
+                  Container(
+                      margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
+                      child: _playButton()),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // --------------------------------- MODULOS ---------------------------------
+  // Formulario
   Form _playerData() {
     return Form(
       key: _formKey,
       child: Column(
         children: [
-          _formText("Introduzca el nombre de su Personaje"),
+          _screenText("Introduzca el nombre de su Personaje", 17),
           Divider(height: 5, color: Colors.transparent),
 
           Container(
@@ -105,13 +107,13 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
           ),
 
           Divider(height: 40, color: Colors.transparent),
-          _formText("Introduzca el Numero de Enemigos"),
+          _screenText("Introduzca el Numero de Enemigos", 17),
 
           Divider(height: 5, color: Colors.transparent),
           _enemiesNumForm(),
 
           Divider(height: 40, color: Colors.transparent),
-          _formText("Elija la clase de su Personaje"),
+          _screenText("Elija la clase de su Personaje", 17),
 
           Divider(height: 5, color: Colors.transparent),
           _playerClass(),
@@ -124,17 +126,19 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
     );
   }
 
-  Text _formText(String text) {
+  // Textos de la pantalla
+  Text _screenText(String text, double size) {
     return Text(
       text,
       style: TextStyle(
         color: Colors.white,
         fontWeight: FontWeight.bold,
-        fontSize: 17,
+        fontSize: size,
       ),
     );
   }
 
+  // Campo de texto del nombre de Usuario
   TextFormField _playerNameField() {
     return TextFormField(
       onChanged: (value) => playerName = value.toString(),
@@ -170,16 +174,18 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
     );
   }
 
+  // Formulario de numero de enemigos
   Container _enemiesNumForm() {
     return Container(
-      padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
       height: 40,
-      width: 100,
+      width: 80,
       color: Color.fromRGBO(0, 0, 0, 0.6),
 
       child: Row(
         children: [
-          Expanded(flex: 5, child: _formText(enemiesNumber.toString())),
+          Expanded(flex: 5, child: Center(child: Container(
+              margin: EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: _screenText(enemiesNumber.toString(), 22)))),
 
           Expanded(flex: 2, child: _numEnemiesButtons()),
         ],
@@ -187,6 +193,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
     );
   }
 
+  // Botones para ajustar el numero de enemigos
   Column _numEnemiesButtons() {
     return Column(
       children: [
@@ -233,6 +240,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
     );
   }
 
+  // Clases de Personaje
   SizedBox _playerClass() {
     return SizedBox(
       child: Column(
@@ -264,8 +272,9 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
     );
   }
 
+  // Casillas de Clases de Personaje
   GestureDetector _classContainer(CharacterClass characterClass) {
-    Color? classColor = null;
+    Color? classColor;
     String className = "";
 
     switch (characterClass) {
@@ -312,21 +321,24 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
           ),
         ),
 
-        child: Center(child: _formText(className)),
+        child: Center(child: _screenText(className, 17)),
       ),
     );
   }
 
+  // Boton para empezar el juego
   ElevatedButton _playButton() {
     return ElevatedButton(
       onPressed: () {
         setState(() {
+            Navigator.pushNamed(context, "/in_game");
           if (classes.values.any((value) => value)) {
           } else {
             classSelected = false;
           }
 
-          if (_formKey.currentState!.validate() && classSelected) {}
+          if (_formKey.currentState!.validate() && classSelected) {
+          }
         });
       },
       style: ElevatedButton.styleFrom(
@@ -334,7 +346,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
         backgroundColor: Colors.deepPurpleAccent,
         maximumSize: Size(100, 40)
       ),
-      child: _formText("Jugar"),
+      child: _screenText("Jugar", 17),
     );
   }
 }
