@@ -9,12 +9,12 @@ class GamePortraitScreen extends StatefulWidget {
 }
 
 class _GamePortraitScreenState extends State<GamePortraitScreen> {
-  var _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
   String playerName = "";
   int enemiesNumber = 1;
-  var playerClass = "";
   bool classSelected = true;
+  CharacterClass? playerClass;
 
   Map<CharacterClass, bool> classes = {
     for (int i = 0; i < CharacterClass.values.length; i++)
@@ -50,7 +50,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-        
+
             SizedBox(
               // 100%
               height: screenHeight,
@@ -58,9 +58,14 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                      margin: EdgeInsets.all(10),
-                      child: Image.asset("assets/title/title.png", height: 200, width: 400)),
-        
+                    margin: EdgeInsets.all(10),
+                    child: Image.asset(
+                      "assets/title/title.png",
+                      height: 200,
+                      width: 400,
+                    ),
+                  ),
+
                   SizedBox(
                     // 55%
                     height: screenHeight * 0.55,
@@ -68,18 +73,20 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
                       child: Column(
                         children: [
                           Container(
-                              margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                              child: _playerData()),
+                            margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                            child: _playerData(),
+                          ),
                         ],
                       ),
                     ),
                   ),
-        
+
                   Spacer(),
-        
+
                   Container(
-                      margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
-                      child: _playButton()),
+                    margin: EdgeInsets.fromLTRB(0, 0, 0, 40),
+                    child: _playButton(),
+                  ),
                 ],
               ),
             ),
@@ -145,7 +152,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
 
       decoration: InputDecoration(
         contentPadding: EdgeInsets.fromLTRB(15, 0, 0, 0),
-        
+
         enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.transparent),
         ),
@@ -183,9 +190,15 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
 
       child: Row(
         children: [
-          Expanded(flex: 5, child: Center(child: Container(
-              margin: EdgeInsets.fromLTRB(0, 0, 0, 10),
-              child: _screenText(enemiesNumber.toString(), 22)))),
+          Expanded(
+            flex: 5,
+            child: Center(
+              child: Container(
+                margin: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                child: _screenText(enemiesNumber.toString(), 22),
+              ),
+            ),
+          ),
 
           Expanded(flex: 2, child: _numEnemiesButtons()),
         ],
@@ -251,24 +264,21 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
           if (index + 1 == filasClases && elementosImpares) {
             fila = Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _classContainer(classes.keys.toList()[cursorLista]),
-
-              ],
+              children: [_classContainer(classes.keys.toList()[cursorLista])],
             );
           } else {
             fila = Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _classContainer(classes.keys.toList()[cursorLista]),
-                _classContainer(classes.keys.toList()[cursorLista + 1])
+                _classContainer(classes.keys.toList()[cursorLista + 1]),
               ],
             );
           }
 
           return fila;
         }),
-      )
+      ),
     );
   }
 
@@ -301,6 +311,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
         setState(() {
           classes.updateAll((key, value) => value = false);
           classes[characterClass] = true;
+          playerClass = characterClass;
           classSelected = true;
         });
       },
@@ -331,20 +342,26 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
     return ElevatedButton(
       onPressed: () {
         setState(() {
-            Navigator.pushNamed(context, "/in_game");
           if (classes.values.any((value) => value)) {
           } else {
             classSelected = false;
           }
 
           if (_formKey.currentState!.validate() && classSelected) {
+            Character player = Character(playerName, playerClass!);
+
+            Navigator.pushNamed(
+              context,
+              "/in_game",
+              arguments: [player, enemiesNumber],
+            );
           }
         });
       },
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
         backgroundColor: Colors.deepPurpleAccent,
-        maximumSize: Size(100, 40)
+        maximumSize: Size(100, 40),
       ),
       child: _screenText("Jugar", 17),
     );

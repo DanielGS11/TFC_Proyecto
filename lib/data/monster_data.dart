@@ -1,69 +1,40 @@
+import 'package:prueba_1/data/skills_data.dart';
 import 'package:prueba_1/models/monster.dart';
 
-List<Monster> monsterList  = [
+List<Monster> monsterList = [
+  Monster("Dragon", "assets/monsters/dragon.png", 700, 700, 17, 20, [
+    skillList.firstWhere((skill) => skill.name == "Aliento Igneo"),
+    skillList.firstWhere((skill) => skill.name == "Temblor"),
+    skillList.firstWhere((skill) => skill.name == "Aumentar Ataque"),
+    skillList.firstWhere((skill) => skill.name == "Aumentar Defensa"),
+  ]),
+
+  Monster("Golem", "assets/monsters/golem.png", 800, 800, 15, 30, [
+    skillList.firstWhere((skill) => skill.name == "Temblor"),
+    skillList.firstWhere((skill) => skill.name == "Aumentar Defensa"),
+  ]),
+
   Monster(
-    "Dragon",
-    "assets/monsters/dragon.png",
-    300,
-    300,
+    "Goblin Campeon",
+    "assets/monsters/champion_goblin.png",
+    400,
+    400,
+    12,
     17,
-    20,
-      {
-        "Aliento Igneo": 20,
-        "Temblor": 17
-      }
+    [
+      skillList.firstWhere((skill) => skill.name == "Aumentar Ataque"),
+      skillList.firstWhere((skill) => skill.name == "Aumentar Defensa"),
+    ],
   ),
 
-  Monster(
-      "Golem",
-      "assets/monsters/golem.png",
-      400,
-      400,
-      15,
-      30,
-      {
-        "Temblor": 17,
-        "Aumentar Defensa": 0,
-      }
-  ),
+  Monster("Minotauro", "assets/monsters/minotaur.png", 540, 540, 15, 17, [
+    skillList.firstWhere((skill) => skill.name == "Aumentar Ataque"),
+    skillList.firstWhere((skill) => skill.name == "Temblor"),
+  ]),
 
-  Monster(
-      "Goblin Campeon",
-      "assets/monsters/champion_goblin.png",
-      200,
-      200,
-      12,
-      17,
-      {
-        "Aumentar Ataque": 0,
-        "Aumentar Defensa": 0,
-      }
-  ),
-
-  Monster(
-      "Minotauro",
-      "assets/monsters/minotaur.png",
-      270,
-      270,
-      15,
-      17,
-      {
-        "Aumentar Ataque": 0,
-        "Temblor": 17,
-      }
-  ),
-
-  Monster(
-      "Archidemonio",
-      "assets/monsters/archdemon.png",
-      320,
-      320,
-      17,
-      17,
-      {
-        "Aumentar Ataque": 0,
-        "AquaGarra": 15,
-        "Garra Ignea": 15,
-      }
-  ),
+  Monster("Archidemonio", "assets/monsters/archdemon.png", 620, 620, 17, 17, [
+    skillList.firstWhere((skill) => skill.name == "Aumentar Ataque"),
+    skillList.firstWhere((skill) => skill.name == "Aqua Garra"),
+    skillList.firstWhere((skill) => skill.name == "Garra Ignea"),
+  ]),
 ];

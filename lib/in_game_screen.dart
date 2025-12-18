@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:prueba_1/data/monster_data.dart';
+import 'package:prueba_1/models/Skill.dart';
 import 'package:prueba_1/models/character.dart';
 import 'package:prueba_1/models/monster.dart';
 
@@ -13,45 +14,77 @@ class InGameScreen extends StatefulWidget {
 }
 
 class _InGameScreenState extends State<InGameScreen> {
-  int enemiesNum = 5;
-  int enemiesDefeated = 0;
+  final _scrollPrompt = ScrollController();
 
-  Character player = Character("Dani", CharacterClass.Mage);
+  int enemiesDefeated = 0;
+  int turnos = 1;
 
   bool skillMenuDeployed = false;
   bool runAwayMenuDeployed = false;
 
+  // Coge una skill para mostrar detalles si se pulsa largo en el menu
+  Skill? skillDetail = null;
+
   String room = "assets/background/in_game/room.png";
 
-  List<String> prompts = [];
+  late List<Monster> monsters;
+  late Character player;
+  late int enemiesNum;
+  late Monster currentEnemy;
+  late List<String> prompts;
 
-  late List<Monster> monsters = List.generate(enemiesNum, (_) {
-    Monster monster = monsterList[Random().nextInt(monsterList.length)];
+  @override
+  void initState() {
+    super.initState();
 
-    return Monster(
-        monster.name,
-        monster.photo,
-        monster.maxLife,
-        monster.life,
-        monster.attack,
-        monster.defense,
-        monster.magic)
-    ;
-  });
+    // Se asignarán desde los argumentos
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      List<dynamic> matchData =
+          ModalRoute.of(context)!.settings.arguments as List<dynamic>;
+      player = matchData.first;
+      enemiesNum = matchData.last;
 
-  Monster get currentEnemy => monsters[enemiesDefeated];
+      monsters = List.generate(enemiesNum, (_) {
+        Monster monster = monsterList[Random().nextInt(monsterList.length)];
+        return Monster(
+          monster.name,
+          monster.photo,
+          monster.maxLife,
+          monster.life,
+          monster.attack,
+          monster.defense,
+          monster.skills,
+        );
+      });
+
+      currentEnemy = monsters[enemiesDefeated];
+
+      if (enemiesDefeated == enemiesNum - 1) {
+        room = "assets/background/in_game/last_room.png";
+      }
+
+      prompts = ["${currentEnemy.name} aparecio!"];
+      setState(() {}); // fuerza rebuild después de crear la lista
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (enemiesDefeated == enemiesNum - 1) {
-      room = "assets/background/in_game/last_room.png";
-    }
-
     // Aqui pillo la altura de pantalla para poner porcentajes de altura
-    double screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
+    double screenHeight = MediaQuery.of(context).size.height;
+
+    // Aqui pillo la anchura de pantalla para poner porcentajes de anchura
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    /*
+     Con este metodo espera a que se termine de llamar la command Prompt y
+     se desplaza al final
+     */
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollPrompt.hasClients) {
+        _scrollPrompt.jumpTo(_scrollPrompt.position.maxScrollExtent);
+      }
+    });
 
     return Scaffold(
       body: SafeArea(
@@ -77,7 +110,7 @@ class _InGameScreenState extends State<InGameScreen> {
 
                 SizedBox(height: 250, width: 300, child: _enemyImage()),
 
-                Divider(height: 10, color: Colors.transparent),
+                Divider(height: 5, color: Colors.transparent),
 
                 Container(
                   height: 20,
@@ -95,10 +128,42 @@ class _InGameScreenState extends State<InGameScreen> {
 
                 Spacer(),
 
-                Container(
-                  height: screenHeight * 0.3,
-                  color: Color.fromRGBO(0, 0, 140, 0.6),
-                  child: _playerMenu(),
+                SizedBox(
+                  height: screenHeight * 0.41,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: screenHeight * 0.03,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: skillMenuDeployed
+                              ? [
+                                  Container(
+                                    margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                    child: _screenText(
+                                      "Manten pulsado sobre la magia para ver mas informacion",
+                                      11,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.help_outline,
+                                    color: Colors.white,
+                                    size: 11,
+                                  ),
+                                ]
+                              : [],
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          color: Color.fromRGBO(0, 0, 140, 0.6),
+                          child: _playerMenu(screenWidth),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // _playerMenu(),
                 ),
               ],
             ),
@@ -114,15 +179,15 @@ class _InGameScreenState extends State<InGameScreen> {
   }
 
   // Menu del Jugador
-  Column _playerMenu() {
+  Column _playerMenu(double screenWidth) {
     return Column(
       children: [
         Expanded(
           child: Row(
             children: [
-              Expanded(child: _commandPrompt()),
+              SizedBox(width: screenWidth * 0.58, child: _commandPrompt()),
 
-              Expanded(child: _menu()),
+              SizedBox(width: screenWidth * 0.42, child: _menu()),
             ],
           ),
         ),
@@ -143,24 +208,49 @@ class _InGameScreenState extends State<InGameScreen> {
 
   // Command Prompt
   Container _commandPrompt() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(8, 5, 0, 0),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Color.fromRGBO(194, 194, 194, 0.3),
-          width: 1.5,
+    Container promptContainer = Container();
+
+    if (skillDetail != null) {
+      promptContainer = Container(
+        padding: EdgeInsets.fromLTRB(8, 5, 0, 0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Color.fromRGBO(194, 194, 194, 0.3),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: ListView(
-        children: List.generate(
-          prompts.length,
-              (index) => _screenText("> ${prompts[index]}", 12),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(children: [_screenText(skillDetail!.description, 12)]),
+
+            Center(child: _screenText("Poder: ${skillDetail!.power}", 12)),
+          ],
         ),
-      ),
-    );
+      );
+    } else {
+      promptContainer = Container(
+        padding: EdgeInsets.fromLTRB(8, 5, 0, 0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Color.fromRGBO(194, 194, 194, 0.3),
+            width: 1.5,
+          ),
+        ),
+        child: ListView(
+          controller: _scrollPrompt,
+          children: List.generate(
+            prompts.length,
+            (index) => _prompt("> ${prompts[index]}", ValueKey(index)),
+          ),
+        ),
+      );
+    }
+
+    return promptContainer;
   }
 
-  // Menu de skills
+  // Menu de skills/huida
   Container _menu() {
     Container menu = Container(
       decoration: BoxDecoration(
@@ -180,13 +270,10 @@ class _InGameScreenState extends State<InGameScreen> {
           ),
         ),
         child: ListView(
-          children: List.generate(player.magic.length, (index) {
-            String magicName = player.magic.keys.toList()[index];
+          children: List.generate(player.skills.length, (index) {
+            String magicName = player.skills[index].name;
 
-            return Container(
-              margin: EdgeInsets.fromLTRB(5, 5, 0, 5),
-              child: _screenText("- $magicName", 12),
-            );
+            return _skill(magicName);
           }),
         ),
       );
@@ -204,36 +291,50 @@ class _InGameScreenState extends State<InGameScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _screenText("¿Seguro de que Quieres Huir?", 12),
-
-            Divider(height: 10, color: Colors.transparent),
+            Text(
+              "La Partida acabara si te vas",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {});
+                    Navigator.pushNamed(
+                      context,
+                      "/result",
+                      arguments: [player, "Run Away"],
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(3),
                     ),
+                    minimumSize: Size(35, 25),
                     backgroundColor: Colors.red,
                   ),
-                  child: _screenText("Si", 17),
+                  child: _screenText("Si", 14),
                 ),
 
                 ElevatedButton(
                   onPressed: () {
-                    setState(() {});
+                    setState(() {
+                      runAwayMenuDeployed = false;
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(3),
                     ),
                     backgroundColor: Colors.grey.shade700,
+                    minimumSize: Size(35, 25),
                   ),
-                  child: _screenText("No", 17),
+                  child: _screenText("No", 14),
                 ),
               ],
             ),
@@ -282,8 +383,8 @@ class _InGameScreenState extends State<InGameScreen> {
 
             child: Center(
               child: _healthBar(
-                player.stats["maxLife"]!,
-                player.stats["life"]!,
+                player.stats["Vida Maxima"]!,
+                player.stats["Vida"]!,
               ),
             ),
           ),
@@ -333,28 +434,37 @@ class _InGameScreenState extends State<InGameScreen> {
               break;
 
             case "Ataque":
+              prompts.add("- Turno ${turnos.toString()}");
+              turnos++;
               runAwayMenuDeployed = false;
               skillMenuDeployed = false;
 
-              damage = (player.stats["attack"]! * (200 / currentEnemy.defense))
+              damage = ((player.stats["Ataque"]! * 7) - currentEnemy.defense)
                   .round();
 
-              if ((currentEnemy.life - damage) <= 0) {
-                currentEnemy.life = 0;
-                enemiesDefeated++;
-              } else {
-                currentEnemy.life -= damage;
+              if (damage < 2) {
+                damage = 2;
               }
 
-              prompts.addAll([
-                "${player.name} ataco a ${currentEnemy.name}",
-                "${player.name} hizo $damage puntos de daño",
-              ]);
+              prompts.add("${player.name} ataco a ${currentEnemy.name}");
+
+              _attackToEnemy(damage);
               break;
 
             case "Defensa":
+              prompts.add("- Turno ${turnos.toString()}");
+              turnos++;
               runAwayMenuDeployed = false;
               skillMenuDeployed = false;
+
+              player.stats["Defensa"] = player.stats["Defensa"]! * 3;
+
+              prompts.add("${player.name} se defiende");
+              if (currentEnemy.life > 0) {
+                _enemyAttack();
+              }
+
+              player.stats["Defensa"] = (player.stats["Defensa"]! / 3).round();
               break;
 
             case "Huir":
@@ -408,20 +518,18 @@ class _InGameScreenState extends State<InGameScreen> {
 
   // Barras de Vida
   Stack _healthBar(int maxLife, int life) {
-    int lifePerSection = (maxLife / 10).round();
-
     return Stack(
       children: [
         Row(
-          children: List.generate(10, (index) {
+          children: List.generate(maxLife, (index) {
             return Expanded(
               child: Container(
-                color: ((lifePerSection * (index)) >= life)
+                color: (index >= life)
                     ? Colors.transparent
-                    : ((maxLife / 2) >= life)
-                    ? Colors.orange
                     : ((maxLife / 4) > life)
                     ? Colors.red.shade700
+                    : ((maxLife / 2) >= life)
+                    ? Colors.orange
                     : Colors.green,
               ),
             );
@@ -430,6 +538,281 @@ class _InGameScreenState extends State<InGameScreen> {
 
         Center(child: _screenText(life.toString(), 14)),
       ],
+    );
+  }
+
+  // Magias del Personaje
+  GestureDetector _skill(String skillName) {
+    Skill skill = player.skills.firstWhere((skill) => skill.name == skillName);
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          prompts.add("- Turno ${turnos.toString()}");
+          turnos++;
+          if (skill.power != 0) {
+            int damage =
+                ((player.stats["Ataque Magico"]! + (skill.power) * 3) -
+                        -currentEnemy.defense)
+                    .round();
+
+            if (damage < 2) {
+              damage = 2;
+            }
+
+            prompts.add("${player.name} uso $skillName");
+
+            _attackToEnemy(damage);
+          } else {
+            switch (skillName) {
+              case "Aumentar Ataque":
+                if (player.attackBoostTurns == 0 && !player.attackBoost) {
+                  player.stats["Ataque"] = player.stats["Ataque"]! * 2;
+                  prompts.addAll(["${player.name} uso $skillName",
+                  "Su Ataque Aumento!"]);
+                  player.attackBoost = true;
+                } else {
+                  prompts.add("No paso nada");
+                }
+                break;
+
+              case "Aumentar Defensa":
+                if (player.defenseBoostTurns == 0 && !player.defenseBoost) {
+                  player.stats["Defensa"] = player.stats["Defensa"]! * 2;
+                  prompts.addAll(["${player.name} uso $skillName",
+                  "Su Defensa Aumento!"]);
+                  player.defenseBoost = true;
+                } else {
+                  prompts.add("No paso nada");
+                }
+                break;
+
+              case "Meditar":
+                prompts.add("${player.name} uso $skillName");
+
+                if (player.stats["Vida"] == player.stats["Vida Maxima"]) {
+                  prompts.add("${player.name} no puede curarse mas");
+                } else {
+                  int curacion = (player.stats["Vida Maxima"]! / 2).round();
+
+                  if ((player.stats["Vida Maxima"]! - player.stats["Vida"]!) <
+                      curacion) {
+                    curacion =
+                        player.stats["Vida Maxima"]! - player.stats["Vida"]!;
+
+                    player.stats["Vida"] = player.stats["Vida Maxima"]!;
+                  } else {
+                    player.stats["Vida"] = player.stats["Vida"]! + curacion;
+                  }
+
+                  prompts.add("${player.name} se curo $curacion puntos");
+                }
+            }
+            if (currentEnemy.life > 0) {
+              _enemyAttack();
+            }
+          }
+          skillMenuDeployed = false;
+        });
+      },
+
+      onLongPressStart: (_) {
+        setState(() {
+          skillDetail = skill;
+        });
+      },
+
+      onLongPressEnd: (_) {
+        setState(() {
+          skillDetail = null;
+        });
+      },
+
+
+      child: Container(
+        margin: EdgeInsets.fromLTRB(5, 5, 0, 0),
+        child: _screenText("- $skillName", 12),
+      ),
+    );
+  }
+
+  // Ataque enemigo
+  void _enemyAttack() {
+    int attackIndex = Random().nextInt(currentEnemy.skills.length + 4);
+    int damage = 0;
+
+    if (attackIndex >= currentEnemy.skills.length) {
+      damage = ((currentEnemy.attack * 5) / player.stats["Defensa"]!).round();
+      prompts.add("${currentEnemy.name} ataca a ${player.name}");
+
+      if (damage < 5) {
+        damage = 5;
+      }
+
+      player.stats["Vida"] = player.stats["Vida"]! - damage;
+
+      prompts.add("Hizo $damage puntos de daño");
+    } else {
+      Skill skill = currentEnemy.skills.elementAt(attackIndex);
+
+      prompts.add("${currentEnemy.name} uso ${skill.name}");
+
+      if (skill.power != 0) {
+        damage =
+            (((currentEnemy.attack + skill.power) * 5) /
+                    player.stats["Defensa"]!)
+                .round();
+
+        if (damage < 5) {
+          damage = 5;
+        }
+
+        player.stats["Vida"] = player.stats["Vida"]! - damage;
+        prompts.add("Hizo $damage puntos de daño");
+      } else {
+        switch (skill.name) {
+          case "Aumentar Ataque":
+            if (currentEnemy.attackBoostTurns == 0 &&
+                !currentEnemy.attackBoost) {
+              currentEnemy.attack = currentEnemy.attack * 2;
+              prompts.add("Su Ataque Aumento!");
+              currentEnemy.attackBoost = true;
+            } else {
+              prompts.add("No paso nada");
+            }
+            break;
+
+          case "Aumentar Defensa":
+            if (currentEnemy.defenseBoostTurns == 0 &&
+                !currentEnemy.defenseBoost) {
+              currentEnemy.defense = currentEnemy.defense * 2;
+              prompts.add("Su Defensa Aumento!");
+              currentEnemy.defenseBoost = true;
+            } else {
+              prompts.add("No paso nada");
+            }
+            break;
+        }
+      }
+    }
+
+    // Navegar si el jugador fue derrotado
+    if (player.stats["Vida"]! <= 0) {
+      player.stats["Vida"] = 0;
+      Navigator.pushNamed(context, "/result", arguments: [player, "Lose"]);
+    }
+
+    // Contadores de turnos de los boosts
+    //Enemigo
+    if (currentEnemy.attackBoost || currentEnemy.defenseBoost) {
+      _enemyEndBoostTurn();
+    }
+
+    if (player.attackBoost || player.defenseBoost) {
+      _playerEndBoostTurn();
+    }
+  }
+
+  // Atacar a un enemigo
+  void _attackToEnemy(int damage) {
+    currentEnemy.life -= damage;
+    prompts.add("Hizo $damage puntos de daño");
+
+    if (currentEnemy.life > 0) {
+      _enemyAttack();
+    }
+
+    // Cambiar de enemigo al derrotarlo
+    if (currentEnemy.life <= 0 && enemiesDefeated < enemiesNum) {
+      currentEnemy.life = 0;
+      player.levelUp();
+
+      prompts.addAll([
+        "${currentEnemy.name} fue derrotado",
+        "${player.name} subio de nivel!",
+        "",
+      ]);
+
+      enemiesDefeated++;
+
+      currentEnemy = monsters[enemiesDefeated];
+
+      prompts.add("${currentEnemy.name} aparecio!");
+    }
+
+    if (enemiesDefeated == enemiesNum - 1) {
+      room = "assets/background/in_game/last_room.png";
+    }
+
+    // Navegar Cuando se acaben los enemigos
+    if (enemiesDefeated == enemiesNum) {
+      Navigator.pushNamed(context, "/result", arguments: [player, "Win"]);
+    }
+  }
+
+  // Contador de turnos restantes de boost del enemigo
+  void _enemyEndBoostTurn() {
+    if (currentEnemy.attackBoost) {
+      currentEnemy.attackBoostTurns++;
+
+      if (currentEnemy.attackBoostTurns == 3) {
+        currentEnemy.attackBoostTurns = 0;
+        currentEnemy.attackBoost = false;
+        currentEnemy.attack = (currentEnemy.attack / 2).round();
+        prompts.add("El Ataque de ${currentEnemy.name} volvio a la normalidad");
+      }
+    }
+
+    if (currentEnemy.defenseBoost) {
+      currentEnemy.defenseBoostTurns++;
+
+      if (currentEnemy.defenseBoostTurns == 3) {
+        currentEnemy.defenseBoostTurns = 0;
+        currentEnemy.defenseBoost = false;
+        currentEnemy.defense = (currentEnemy.defense / 2).round();
+        prompts.add(
+          "La Defensa de ${currentEnemy.name} volvio a la normalidad",
+        );
+      }
+    }
+  }
+
+  // Contador de turnos restantes de boost del jugador
+  void _playerEndBoostTurn() {
+    if (player.attackBoost) {
+      player.attackBoostTurns++;
+
+      if (player.attackBoostTurns == 3) {
+        player.attackBoostTurns = 0;
+        player.attackBoost = false;
+        player.stats["Ataque"] = (player.stats["Ataque"]! / 2).round();
+        prompts.add("El Ataque de ${player.name} volvio a la normalidad");
+      }
+    }
+
+    if (player.defenseBoost) {
+      player.defenseBoostTurns++;
+
+      if (player.defenseBoostTurns == 3) {
+        player.defenseBoostTurns = 0;
+        player.defenseBoost = false;
+        player.stats["Defensa"] = (player.stats["Defensa"]! / 2).round();
+        prompts.add(
+          "La Defensa de ${player.name} volvio a la normalidad",
+        );
+      }
+    }
+  }
+
+  // Texto solo para prompts
+  Text _prompt(String text, Key key) {
+    return Text(
+      text,
+      key: key,
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 12,
+      ),
     );
   }
 

@@ -1,5 +1,9 @@
 import 'dart:math';
 
+import 'package:prueba_1/data/skills_data.dart';
+
+import 'Skill.dart';
+
 enum CharacterClass { Mage, Tank, Warrior, Cleric }
 
 class Character {
@@ -8,76 +12,116 @@ class Character {
   int level = 1;
   String avatar = "";
   Map<String, int> stats = {
-    "maxLife": 0,
-    "life": 0,
-    "attack": 0,
-    "magicAttack": 0,
-    "defense": 0,
+    "Vida Maxima": 0,
+    "Vida": 0,
+    "Ataque": 0,
+    "Ataque Magico": 0,
+    "Defensa": 0,
   };
-  Map<String, int> magic = {};
+  List<Skill> skills = [];
+  int attackBoostTurns = 0;
+  int defenseBoostTurns = 0;
+  bool attackBoost = false;
+  bool defenseBoost = false;
 
   Character(this.name, this.characterClass) {
     avatar = "assets/characters/${characterClass.name.toLowerCase()}.png";
 
     switch (characterClass) {
       case CharacterClass.Mage:
-
-        stats["maxLife"] = 100;
-        stats["life"] = 100;
-        stats["attack"] = 2;
-        stats["magicAttack"] = 7;
-        stats["defense"] = 5;
-        magic = {
-          "Fuego": 10,
-          "Agua": 10,
-          "Viento": 10,
-          "Tierra": 10,
-          "Meditar": 0,
-        };
+        stats["Vida Maxima"] = 100;
+        stats["Vida"] = 100;
+        stats["Ataque"] = 1;
+        stats["Ataque Magico"] = 6;
+        stats["Defensa"] = 5;
+        skills = [
+          skillList.firstWhere((skill) => skill.name == "Fuego"),
+          skillList.firstWhere((skill) => skill.name == "Agua"),
+          skillList.firstWhere((skill) => skill.name == "Viento"),
+          skillList.firstWhere((skill) => skill.name == "Tierra"),
+          skillList.firstWhere((skill) => skill.name == "Meditar"),
+        ];
         break;
 
       case CharacterClass.Tank:
-        stats["maxLife"] = 140;
-        stats["life"] = 140;
-        stats["attack"] = 4;
-        stats["magicAttack"] = 1;
-        stats["defense"] = 10;
-        magic = {"Aumentar Defensa": 0, "Meditar": 0};
+        stats["Vida Maxima"] = 140;
+        stats["Vida"] = 140;
+        stats["Ataque"] = 4;
+        stats["Ataque Magico"] = 1;
+        stats["Defensa"] = 10;
+        skills = [
+          skillList.firstWhere((skill) => skill.name == "Aumentar Defensa"),
+          skillList.firstWhere((skill) => skill.name == "Meditar"),
+        ];
         break;
 
       case CharacterClass.Warrior:
-        stats["maxLife"] = 100;
-        stats["life"] = 100;
-        stats["attack"] = 8;
-        stats["magicAttack"] = 2;
-        stats["defense"] = 7;
-        magic = {"Aumentar Ataque": 0, "Meditar": 0};
+        stats["Vida Maxima"] = 100;
+        stats["Vida"] = 100;
+        stats["Ataque"] = 6;
+        stats["Ataque Magico"] = 2;
+        stats["Defensa"] = 7;
+        skills = [
+          skillList.firstWhere((skill) => skill.name == "Aumentar Ataque"),
+          skillList.firstWhere((skill) => skill.name == "Meditar"),
+        ];
         break;
       case CharacterClass.Cleric:
-        stats["maxLife"] = 140;
-        stats["life"] = 140;
-        stats["attack"] = 1;
-        stats["magicAttack"] = 7;
-        stats["defense"] = 7;
-        magic = {"Luz Sagrada": 10, "Meditar": 0};
+        stats["Vida Maxima"] = 140;
+        stats["Vida"] = 140;
+        stats["Ataque"] = 1;
+        stats["Ataque Magico"] = 5;
+        stats["Defensa"] = 3;
+        skills = [
+          skillList.firstWhere((skill) => skill.name == "Luz Sagrada"),
+          skillList.firstWhere((skill) => skill.name == "Meditar"),
+        ];
         break;
     }
   }
 
-  set levelUp(int grow) {
-    level = level + grow;
+  void levelUp() {
+    level++;
 
     stats.forEach((stat, value) {
-      stats[stat] = value + Random().nextInt(3);
+      if (stat == "Vida Maxima") {
+        stats[stat] = value + 10;
+        stats["Vida"] = stats[stat]!;
+      } else if (stat != "Vida") {
+        stats[stat] = value + Random().nextInt(3);
+      }
     });
   }
 
-  void get characterStats {
-    "Name: $name";
-    "Class: $characterClass";
-    "Level: $level";
-    stats.forEach((stat, value) {
-      "$stat: $value";
-    });
+  List<String> get characterStats {
+    String clase = "";
+
+    switch (characterClass.name) {
+      case "Mage":
+        clase = "Mago";
+        break;
+
+      case "Warrior":
+        clase = "Guerrero";
+        break;
+
+      case "Cleric":
+        clase = "Clerigo";
+        break;
+
+      case "Tank":
+        clase = "Tanque";
+        break;
+    }
+
+    List<String> charStats = [
+      "Nombre: $name",
+      "Clase: $clase",
+      "Nivel: $level",
+    ];
+
+    stats.forEach((stat, value) => charStats.add("$stat: $value"));
+
+    return charStats;
   }
 }
