@@ -103,7 +103,7 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
       key: _formKey,
       child: Column(
         children: [
-          _screenText("Introduzca el nombre de su Personaje", 17),
+          _screenText("Introduzca el nombre de su personaje", 17),
           Divider(height: 5, color: Colors.transparent),
 
           Container(
@@ -114,13 +114,13 @@ class _GamePortraitScreenState extends State<GamePortraitScreen> {
           ),
 
           Divider(height: 40, color: Colors.transparent),
-          _screenText("Introduzca el Numero de Enemigos", 17),
+          _screenText("Introduzca el numero de enemigos", 17),
 
           Divider(height: 5, color: Colors.transparent),
           _enemiesNumForm(),
 
           Divider(height: 40, color: Colors.transparent),
-          _screenText("Elija la clase de su Personaje", 17),
+          _screenText("Elija la clase de su personaje", 17),
 
           Divider(height: 5, color: Colors.transparent),
           _playerClass(),

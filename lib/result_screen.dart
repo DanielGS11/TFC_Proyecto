@@ -55,7 +55,7 @@ class ResultScreen extends StatelessWidget {
                       margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
                       child: (result == "Run Away")
                           ? Text(
-                              "Has Huido",
+                              "Has huido",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.greenAccent,
@@ -64,7 +64,7 @@ class ResultScreen extends StatelessWidget {
                             )
                           : (result == "Win")
                           ? Text(
-                              "Has Ganado!",
+                              "Has ganado!",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.yellow.shade700,
@@ -72,7 +72,7 @@ class ResultScreen extends StatelessWidget {
                               ),
                             )
                           : Text(
-                              "Has Perdido",
+                              "Has perdido",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blueAccent,

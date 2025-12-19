@@ -51,6 +51,7 @@ class Character {
         stats["Defensa"] = 10;
         skills = [
           skillList.firstWhere((skill) => skill.name == "Aumentar Defensa"),
+          skillList.firstWhere((skill) => skill.name == "Aumentar Ataque"),
           skillList.firstWhere((skill) => skill.name == "Meditar"),
         ];
         break;
@@ -70,7 +71,7 @@ class Character {
         stats["Vida Maxima"] = 140;
         stats["Vida"] = 140;
         stats["Ataque"] = 1;
-        stats["Ataque Magico"] = 5;
+        stats["Ataque Magico"] = 3;
         stats["Defensa"] = 3;
         skills = [
           skillList.firstWhere((skill) => skill.name == "Luz Sagrada"),

@@ -99,7 +99,7 @@ class _InGameScreenState extends State<InGameScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       _screenText(
-                        "Enemigos Derrotados: $enemiesDefeated/$enemiesNum",
+                        "Enemigos derrotados: $enemiesDefeated/$enemiesNum",
                         20,
                       ),
                     ],
@@ -142,13 +142,16 @@ class _InGameScreenState extends State<InGameScreen> {
                                     margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
                                     child: _screenText(
                                       "Manten pulsado sobre la magia para ver mas informacion",
-                                      11,
+                                      13,
                                     ),
                                   ),
-                                  Icon(
-                                    Icons.help_outline,
-                                    color: Colors.white,
-                                    size: 11,
+                                  Container(
+                                    margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                                    child: Icon(
+                                      Icons.help_outline,
+                                      color: Colors.white,
+                                      size: 11,
+                                    ),
                                   ),
                                 ]
                               : [],
@@ -290,9 +293,9 @@ class _InGameScreenState extends State<InGameScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _screenText("¿Seguro de que Quieres Huir?", 12),
+            _screenText("¿Seguro de que quieres huir?", 12),
             Text(
-              "La Partida acabara si te vas",
+              "La Partida acabará si te vas",
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.red,
@@ -439,7 +442,7 @@ class _InGameScreenState extends State<InGameScreen> {
               runAwayMenuDeployed = false;
               skillMenuDeployed = false;
 
-              damage = ((player.stats["Ataque"]! * 7) - currentEnemy.defense)
+              damage = ((player.stats["Ataque"]! * 6) - currentEnemy.defense)
                   .round();
 
               if (damage < 2) {
@@ -551,8 +554,7 @@ class _InGameScreenState extends State<InGameScreen> {
           turnos++;
           if (skill.power != 0) {
             int damage =
-                ((player.stats["Ataque Magico"]! + (skill.power) * 3) -
-                        -currentEnemy.defense)
+                (((player.stats["Ataque Magico"]! + skill.power) * 3) - currentEnemy.defense)
                     .round();
 
             if (damage < 2) {
@@ -714,6 +716,7 @@ class _InGameScreenState extends State<InGameScreen> {
 
   // Atacar a un enemigo
   void _attackToEnemy(int damage) {
+    setState(() {
     currentEnemy.life -= damage;
     prompts.add("Hizo $damage puntos de daño");
 
@@ -722,7 +725,7 @@ class _InGameScreenState extends State<InGameScreen> {
     }
 
     // Cambiar de enemigo al derrotarlo
-    if (currentEnemy.life <= 0 && enemiesDefeated < enemiesNum) {
+    if (currentEnemy.life <= 0) {
       currentEnemy.life = 0;
       player.levelUp();
 
@@ -734,6 +737,11 @@ class _InGameScreenState extends State<InGameScreen> {
 
       enemiesDefeated++;
 
+      // Navegar Cuando se acaben los enemigos
+      if (enemiesDefeated == enemiesNum) {
+        Navigator.pushNamed(context, "/result", arguments: [player, "Win"]);
+      }
+
       currentEnemy = monsters[enemiesDefeated];
 
       prompts.add("${currentEnemy.name} aparecio!");
@@ -742,11 +750,7 @@ class _InGameScreenState extends State<InGameScreen> {
     if (enemiesDefeated == enemiesNum - 1) {
       room = "assets/background/in_game/last_room.png";
     }
-
-    // Navegar Cuando se acaben los enemigos
-    if (enemiesDefeated == enemiesNum) {
-      Navigator.pushNamed(context, "/result", arguments: [player, "Win"]);
-    }
+    });
   }
 
   // Contador de turnos restantes de boost del enemigo
